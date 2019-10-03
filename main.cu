@@ -29,6 +29,8 @@ struct para
 {
 int task_num;
 int iter;
+int memory_length;
+int kernel_length;
 dim3 gridsize;
 dim3 blocksize;
 int SM_num_start;
@@ -41,8 +43,6 @@ float *d_data2;
 float *d_data3;
 float *d_result;
 long int N;
-float memory_deadline;
-float kernel_deadline;
 long int nBytes;
 };
 
@@ -58,17 +58,8 @@ float priority;
 double time_offset;
 double global_time;
 
-int memory_length1;
-int memory_length2;
-int memory_length3;
-int memory_length4;
-int memory_length5;
 
-int kernel_length1;
-int kernel_length2;
-int kernel_length3;
-int kernel_length4;
-int kernel_length5;
+
 
 
 #include "task.cu"
@@ -102,10 +93,10 @@ int main(int argc,char *argv[])
     int n = 5; 
 
     struct task GPU_task[n];
+
+
     int memory_length[n];
-    float memory_deadline[n];
     int kernel_length[n];
-    float kernel_deadline[n];
     int CTA_num[n];
 
     for(int i = 0; i < n; i++)
@@ -122,7 +113,7 @@ int main(int argc,char *argv[])
 
 
     //data length
-    long int N = 1 << 18;
+    long int N = 1 << 16;
 
 
 
@@ -133,13 +124,12 @@ int main(int argc,char *argv[])
 
     for(int i = 0; i < n; i++)
     {
-    config_input_parameter >> memory_length[n];
-    config_input_parameter >> memory_deadline[n];
-    config_input_parameter >> kernel_length[n];
-    config_input_parameter >> kernel_deadline[n];
+    config_input_parameter >> memory_length[i];
+    config_input_parameter >> kernel_length[i];
+    config_input_parameter >> CTA_num[i];
+
     }
     
-
 
 
 
@@ -150,17 +140,24 @@ int main(int argc,char *argv[])
     for(int i = 0; i < n; i++)
     {
     if(i==0)
-        {
-        CTA_num_start[i] = 0;
-        CTA_num_end[i] = CTA_num_start[i] + CTA_num[i] - 1;
-        }
+    {
+    CTA_num_start[i] = 0;
+    CTA_num_end[i] = CTA_num_start[i] + CTA_num[i] - 1;
+    }
+    else
+    {
     CTA_num_start[i] = CTA_num_end[i-1] + 1;
     CTA_num_end[i] = CTA_num_start[i] + CTA_num[i] - 1;
     }
-
+    
+    cout << "CTA_num_start[i]" << i << ": " << CTA_num_start[i] << endl;
+    cout << "CTA_num_end[i]" << i << ": " << CTA_num_end[i] << endl;
+    }
 
     
      long int nBytes = N * sizeof(float);
+
+    cout << "here1" << endl;
 
     //Apply for host memory
     
@@ -168,18 +165,20 @@ int main(int argc,char *argv[])
 
     for(int i = 0; i < n; i++)
     {
-    checkCuda(cudaMallocHost((void **) &x[n], nBytes));
-    checkCuda(cudaMallocHost((void **) &y[n], nBytes));
-    checkCuda(cudaMallocHost((void **) &z[n], nBytes));
+    checkCuda(cudaMallocHost((void **) &x[i], nBytes));
+    checkCuda(cudaMallocHost((void **) &y[i], nBytes));
+    checkCuda(cudaMallocHost((void **) &z[i], nBytes));
         //Initialize data
         for(int j = 0; j < N; j++)
         {
-        x[i][j] = j % 20;
-        y[i][j] = j % 20;
-        z[i][j] = 0;
+        //x[i][j] = j % 20;
+        //y[i][j] = j % 20;
+        //z[i][j] = 0;
         }
         
     }
+
+    cout << "here2" << endl;
 
 
     //Apply for GPU memory
@@ -187,9 +186,9 @@ int main(int argc,char *argv[])
 
     for(int i = 0; i < n; i++)
     {
-    checkCuda(cudaMalloc((void **) &d_x[n], nBytes));
-    checkCuda(cudaMalloc((void **) &d_y[n], nBytes));
-    checkCuda(cudaMalloc((void **) &d_z[n], nBytes));       
+    checkCuda(cudaMalloc((void **) &d_x[i], nBytes));
+    checkCuda(cudaMalloc((void **) &d_y[i], nBytes));
+    checkCuda(cudaMalloc((void **) &d_z[i], nBytes));       
     }
 
     //Initial grid size
@@ -204,6 +203,8 @@ int main(int argc,char *argv[])
     GPU_para[i].task_num = i;
     GPU_para[i].gridsize = gridsize;
     GPU_para[i].blocksize = blocksize;
+    GPU_para[i].memory_length = memory_length[i];
+    GPU_para[i].kernel_length = kernel_length[i];
     GPU_para[i].SM_num_start = CTA_num_start[i];
     GPU_para[i].SM_num_end = CTA_num_end[i];
     GPU_para[i].d_data01 = x[i];
@@ -213,8 +214,6 @@ int main(int argc,char *argv[])
     GPU_para[i].d_data2 = d_y[i];
     GPU_para[i].d_data3 = d_z[i];
     GPU_para[i].N = N;
-    GPU_para[i].memory_deadline = memory_deadline[i];
-    GPU_para[i].kernel_deadline = kernel_deadline[i];
     GPU_para[i].nBytes = nBytes;
     }
 
@@ -228,40 +227,18 @@ int main(int argc,char *argv[])
 
     for(int i = 0; i < n; i++)
     {
-      pthread_create(&tidp[0], NULL, pthread0, (void *)& GPU_para[i]);
+      pthread_create(&tidp[i], NULL, pthread0, (void *)& GPU_para[i]);
     }
 
     
+    cout << "here 3" << endl;
     
-    //End to launch threads in First deadline first 
+    for(int i = 0; i < n; i++)
+    {
+    pthread_join(tidp[i],NULL);    
+    }
 
-    
-    //cout << "got here2" << endl;
-
-    usleep(200000000);
-    
-    
-    //pthread_cancel(tidp[0]);
-    //pthread_cancel(tidp[1]);
-    //pthread_cancel(tidp[2]);
-    //pthread_cancel(tidp[3]);
-    //pthread_cancel(tidp[4]);
-
-    //pthread_join(tidp[0],NULL);
-    //pthread_join(tidp[1],NULL);
-    //pthread_join(tidp[2],NULL);
-    //pthread_join(tidp[3],NULL);
-    //pthread_join(tidp[4],NULL);
-    
-    
-
-    //cout << "got here3" << endl;
-
-    //cudaMemcpy((void*)z1, (void*)d_z1, nBytes, cudaMemcpyDeviceToHost);
-    //cudaMemcpy((void*)z2, (void*)d_z2, nBytes, cudaMemcpyDeviceToHost);
-    //cudaMemcpy((void*)z3, (void*)d_z3, nBytes, cudaMemcpyDeviceToHost);
-    //cudaMemcpy((void*)z4, (void*)d_z4, nBytes, cudaMemcpyDeviceToHost);
-    //cudaMemcpy((void*)z5, (void*)d_z5, nBytes, cudaMemcpyDeviceToHost);
+    cout << "here 4" << endl;
 
     //Free device memory
     for(int i = 0; i < n; i++)
@@ -272,15 +249,17 @@ int main(int argc,char *argv[])
     }
 
 
+    cout << "here 5" << endl;
+
     //Free host memory
     for(int i = 0; i < n; i++)
     {
-    free(x[i]);
-    free(y[i]);
-    free(z[i]);  
+    cudaFreeHost(x[i]);
+    cudaFreeHost(y[i]);
+    cudaFreeHost(z[i]); 
     }
 
-    
+    cout << "here 6" << endl;
     return 0;
 }
 
@@ -313,15 +292,15 @@ void * pthread0(void *data)
     time_ms_start = tv.tv_sec*1000 + tv.tv_usec/1000 - time_offset;
     
 
-    for(int i = 0; i < memory_length1; i++)
+    for(int i = 0; i < tt->memory_length; i++)
     {
-    cudaMemcpyAsync((void*)tt->d_data03, (void*)tt->d_data3, tt->nBytes, cudaMemcpyDeviceToHost,stream);
     cudaMemcpyAsync((void*)tt->d_data1, (void*)tt->d_data01, tt->nBytes, cudaMemcpyHostToDevice,stream);
     cudaMemcpyAsync((void*)tt->d_data2, (void*)tt->d_data02, tt->nBytes, cudaMemcpyHostToDevice,stream);
+    //cudaMemcpyAsync((void*)tt->d_data03, (void*)tt->d_data3, tt->nBytes, cudaMemcpyDeviceToHost,stream);
     }
-    cudaStreamSynchronize(stream);
+    //cudaStreamSynchronize(stream);
     
-    for(int i = 0; i < kernel_length1; i++)
+    for(int i = 0; i < tt->kernel_length; i++)
     {
     task <<<tt->gridsize,tt->blocksize,0,stream>>> (tt->d_data1, tt->d_data2, tt->d_data3, tt->N, tt->SM_num_start, tt->SM_num_end);
     }
@@ -338,8 +317,8 @@ void * pthread0(void *data)
     
     cout << "task " << 1+tt->task_num << " duration:" << duration << endl;
 
-
-
+ 
+    cudaStreamDestroy(stream);
 
     return 0;
 }

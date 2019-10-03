@@ -35,7 +35,6 @@ int SM_num;
 SM_num = __mysmid();
 
 
-
 if((SM_num_start <= SM_num)&&(SM_num <= SM_num_end))
 {    
     // Key technique use the (__mysmid() - SM_num_start) as blockIdx.x
