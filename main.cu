@@ -28,7 +28,6 @@ using namespace std;
 struct para
 {
 int task_num;
-cudaStream_t stream;
 int iter;
 dim3 gridsize;
 dim3 blocksize;
@@ -106,7 +105,7 @@ int main(int argc,char *argv[])
     int memory_length[n];
     float memory_deadline[n];
     int kernel_length[n];
-    kernel_deadline[n];
+    float kernel_deadline[n];
     int CTA_num[n];
 
     for(int i = 0; i < n; i++)
@@ -119,14 +118,6 @@ int main(int argc,char *argv[])
     //create CPU thread
     pthread_t tidp[n];
     struct para GPU_para[n];
-
-    
-    //create CUDA stream
-    for(int i = 0; i < n; i++)
-    {
-    cudaStream_t stream[i];
-    cudaStreamCreate(&stream[i]);
-    }
 
 
 
@@ -168,11 +159,11 @@ int main(int argc,char *argv[])
     }
 
 
-    long int nBytes = N * sizeof(float);
     
+     long int nBytes = N * sizeof(float);
 
     //Apply for host memory
-    long int nBytes = N * sizeof(float);
+    
     float *x[n], *y[n], *z[n];
 
     for(int i = 0; i < n; i++)
@@ -181,11 +172,11 @@ int main(int argc,char *argv[])
     checkCuda(cudaMallocHost((void **) &y[n], nBytes));
     checkCuda(cudaMallocHost((void **) &z[n], nBytes));
         //Initialize data
-        for(long int i = 0; i < N; i++)
+        for(int j = 0; j < N; j++)
         {
-        x[i] = i % 20;
-        y[i] = i % 20;
-        z[i] = 0;
+        x[i][j] = j % 20;
+        y[i][j] = j % 20;
+        z[i][j] = 0;
         }
         
     }
@@ -211,7 +202,6 @@ int main(int argc,char *argv[])
     for(int i = 0; i < n; i++)
     {
     para[i].task_num = i;
-    para[i].stream = stream[i];
     para[i].gridsize = gridsize;
     para[i].blocksize = blocksize;
     para[i].SM_num_start = CTA_num_start[i];
@@ -290,12 +280,6 @@ int main(int argc,char *argv[])
     free(z[i]);  
     }
 
-    for(int i = 0; i < n; i++)
-    {
-    cudaStreamDestroy(stream[i]);
-    }
-
-
     
     return 0;
 }
@@ -316,6 +300,9 @@ void * pthread0(void *data)
         cout << "Fail to pin to core " << 1+tt->task_num << endl;
 
 
+    cudaStream_t stream;
+    cudaStreamCreate(&stream);
+
 
     struct timeval tv;
     double time_ms_start;
@@ -330,19 +317,19 @@ void * pthread0(void *data)
 
     for(int i = 0; i < memory_length1; i++)
     {
-    cudaMemcpyAsync((void*)tt->d_data03, (void*)tt->d_data3, tt->nBytes, cudaMemcpyDeviceToHost,tt->stream);
-    cudaMemcpyAsync((void*)tt->d_data1, (void*)tt->d_data01, tt->nBytes, cudaMemcpyHostToDevice,tt->stream);
-    cudaMemcpyAsync((void*)tt->d_data2, (void*)tt->d_data02, tt->nBytes, cudaMemcpyHostToDevice,tt->stream);
+    cudaMemcpyAsync((void*)tt->d_data03, (void*)tt->d_data3, tt->nBytes, cudaMemcpyDeviceToHost,stream);
+    cudaMemcpyAsync((void*)tt->d_data1, (void*)tt->d_data01, tt->nBytes, cudaMemcpyHostToDevice,stream);
+    cudaMemcpyAsync((void*)tt->d_data2, (void*)tt->d_data02, tt->nBytes, cudaMemcpyHostToDevice,stream);
     }
-    cudaStreamSynchronize(tt->stream);
+    cudaStreamSynchronize(stream);
     
     for(int i = 0; i < kernel_length1; i++)
     {
-    task <<<tt->gridsize,tt->blocksize,0,tt->stream>>> (tt->d_data1, tt->d_data2, tt->d_data3, tt->N, tt->SM_num_start, tt->SM_num_end);
+    task <<<tt->gridsize,tt->blocksize,0,stream>>> (tt->d_data1, tt->d_data2, tt->d_data3, tt->N, tt->SM_num_start, tt->SM_num_end);
     }
 
 
-    cudaStreamSynchronize(tt->stream);
+    cudaStreamSynchronize(stream);
 
 
     gettimeofday(&tv,NULL);
