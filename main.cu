@@ -59,6 +59,12 @@ double time_offset;
 double global_time;
 
 
+//task number
+int n = 5; 
+struct task GPU_task[5];
+
+// Scheduler order
+int sched_order[] = {5,4,3,2,1};
 
 
 
@@ -87,12 +93,6 @@ int main(int argc,char *argv[])
         cout << "Fail to pin to core 0" << endl;
 
     //Initialize task queque
-
-
-    //task number
-    int n = 5; 
-
-    struct task GPU_task[n];
 
 
     int memory_length[n];
@@ -230,6 +230,9 @@ int main(int argc,char *argv[])
       pthread_create(&tidp[i], NULL, pthread0, (void *)& GPU_para[i]);
     }
 
+
+
+
     
     cout << "here 3" << endl;
     
@@ -264,7 +267,8 @@ int main(int argc,char *argv[])
 }
 
 
-void * pthread0(void *data)       
+
+void * scheduler(void *data)       
 {
 
     struct para* tt = (struct para*)data;
@@ -277,6 +281,32 @@ void * pthread0(void *data)
     s = pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset1);
     if (s != 0)
         cout << "Fail to pin to core " << 1+tt->task_num << endl;
+    for(int i = 0; i < n; i++)
+    {
+    GPU_task[sched_order[i]].ready = true;
+        while(GPU_task[sched_order].ready)
+        {
+        
+        }
+    }
+
+
+    return 0;
+}
+
+void * pthread0(void *data)       
+{
+
+    struct para* tt = (struct para*)data;
+
+    // pin to a core
+    cpu_set_t cpuset1;
+    CPU_ZERO(&cpuset1);
+    CPU_SET(2+tt->task_num, &cpuset1);
+    int s;
+    s = pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset1);
+    if (s != 0)
+        cout << "Fail to pin to core " << 2+tt->task_num << endl;
 
 
     cudaStream_t stream;
@@ -298,7 +328,10 @@ void * pthread0(void *data)
     cudaMemcpyAsync((void*)tt->d_data2, (void*)tt->d_data02, tt->nBytes, cudaMemcpyHostToDevice,stream);
     //cudaMemcpyAsync((void*)tt->d_data03, (void*)tt->d_data3, tt->nBytes, cudaMemcpyDeviceToHost,stream);
     }
-    //cudaStreamSynchronize(stream);
+    cudaStreamSynchronize(stream);
+
+    GPU_task[tt->task_num].ready = false;
+
     
     for(int i = 0; i < tt->kernel_length; i++)
     {
