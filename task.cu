@@ -20,11 +20,20 @@
 
 using namespace std;
 
+
+
+static __device__ __inline__ uint32_t __mysmid(){    
+  uint32_t smid;    
+  asm volatile("mov.u32 %0, %%smid;" : "=r"(smid));
+  return smid;}
+
+
 //global function
 __global__ void task(float* x, float * y, float* z, int n, int SM_num_start, int SM_num_end){
 
 int SM_num;
 SM_num = __mysmid();
+
 
 
 if((SM_num_start <= SM_num)&&(SM_num <= SM_num_end))

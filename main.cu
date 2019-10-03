@@ -22,7 +22,7 @@
 
 
 using namespace std;
-
+void * pthread0(void *data);
 
 
 struct para
@@ -117,7 +117,7 @@ int main(int argc,char *argv[])
 
     //create CPU thread
     pthread_t tidp[n];
-    struct para GPU_para[n];
+    
 
 
 
@@ -198,24 +198,24 @@ int main(int argc,char *argv[])
     dim3 gridsize(56);   
 
     //passing data
-    struct para para[n];
+    struct para GPU_para[n];
     for(int i = 0; i < n; i++)
     {
-    para[i].task_num = i;
-    para[i].gridsize = gridsize;
-    para[i].blocksize = blocksize;
-    para[i].SM_num_start = CTA_num_start[i];
-    para[i].SM_num_end = CTA_num_end[i];
-    para[i].d_data01 = x[i];
-    para[i].d_data02 = y[i];
-    para[i].d_data03 = z[i];
-    para[i].d_data1 = d_x[i];
-    para[i].d_data2 = d_y[i];
-    para[i].d_data3 = d_z[i];
-    para[i].N = N;
-    para[i].memory_deadline = memory_deadline[i];
-    para[i].kernel_deadline = kernel_deadline[i];
-    para[i].nBytes = nBytes;
+    GPU_para[i].task_num = i;
+    GPU_para[i].gridsize = gridsize;
+    GPU_para[i].blocksize = blocksize;
+    GPU_para[i].SM_num_start = CTA_num_start[i];
+    GPU_para[i].SM_num_end = CTA_num_end[i];
+    GPU_para[i].d_data01 = x[i];
+    GPU_para[i].d_data02 = y[i];
+    GPU_para[i].d_data03 = z[i];
+    GPU_para[i].d_data1 = d_x[i];
+    GPU_para[i].d_data2 = d_y[i];
+    GPU_para[i].d_data3 = d_z[i];
+    GPU_para[i].N = N;
+    GPU_para[i].memory_deadline = memory_deadline[i];
+    GPU_para[i].kernel_deadline = kernel_deadline[i];
+    GPU_para[i].nBytes = nBytes;
     }
 
     
@@ -228,7 +228,7 @@ int main(int argc,char *argv[])
 
     for(int i = 0; i < n; i++)
     {
-      pthread_create(&tidp[0], NULL, pthread0, (void *)& para[i]);
+      pthread_create(&tidp[0], NULL, pthread0, (void *)& GPU_para[i]);
     }
 
     
@@ -311,8 +311,6 @@ void * pthread0(void *data)
 
     gettimeofday(&tv,NULL);
     time_ms_start = tv.tv_sec*1000 + tv.tv_usec/1000 - time_offset;
-
-    task1.absolute_deadline = time_ms_start + tt->memory_deadline;
     
 
     for(int i = 0; i < memory_length1; i++)
@@ -337,13 +335,11 @@ void * pthread0(void *data)
     
     duration = time_ms_end - time_ms_start;
 
-    if(duration > tt->kernel_deadline)
-    {
-    cout << "1_1 miss, duration:" << duration << endl;
-    exit(0);
-    }
+    
+    cout << "task " << 1+tt->task_num << " duration:" << duration << endl;
 
-    //cout << "1_1 pass" << endl;
+
+
 
     return 0;
 }
