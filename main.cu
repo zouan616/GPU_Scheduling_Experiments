@@ -23,7 +23,7 @@
 
 using namespace std;
 void * pthread0(void *data);
-
+void * scheduler(void *data);
 
 struct para
 {
@@ -64,7 +64,7 @@ int n = 5;
 struct task GPU_task[5];
 
 // Scheduler order
-int sched_order[] = {5,4,3,2,1};
+int sched_order[] = {5,1,2,3,4};
 
 
 
@@ -108,7 +108,7 @@ int main(int argc,char *argv[])
 
     //create CPU thread
     pthread_t tidp[n];
-    
+    pthread_t scheduler_thread;
 
 
 
@@ -150,14 +150,13 @@ int main(int argc,char *argv[])
     CTA_num_end[i] = CTA_num_start[i] + CTA_num[i] - 1;
     }
     
-    cout << "CTA_num_start[i]" << i << ": " << CTA_num_start[i] << endl;
-    cout << "CTA_num_end[i]" << i << ": " << CTA_num_end[i] << endl;
+    //cout << "CTA_num_start[i]" << i << ": " << CTA_num_start[i] << endl;
+    //cout << "CTA_num_end[i]" << i << ": " << CTA_num_end[i] << endl;
     }
 
     
      long int nBytes = N * sizeof(float);
 
-    cout << "here1" << endl;
 
     //Apply for host memory
     
@@ -178,7 +177,6 @@ int main(int argc,char *argv[])
         
     }
 
-    cout << "here2" << endl;
 
 
     //Apply for GPU memory
@@ -231,17 +229,19 @@ int main(int argc,char *argv[])
     }
 
 
+    usleep(1000000);
 
+    pthread_create(&scheduler_thread, NULL, scheduler, NULL);
 
     
-    cout << "here 3" << endl;
+
     
     for(int i = 0; i < n; i++)
     {
     pthread_join(tidp[i],NULL);    
     }
 
-    cout << "here 4" << endl;
+
 
     //Free device memory
     for(int i = 0; i < n; i++)
@@ -252,7 +252,6 @@ int main(int argc,char *argv[])
     }
 
 
-    cout << "here 5" << endl;
 
     //Free host memory
     for(int i = 0; i < n; i++)
@@ -262,7 +261,7 @@ int main(int argc,char *argv[])
     cudaFreeHost(z[i]); 
     }
 
-    cout << "here 6" << endl;
+    cout << "Finish!" << endl;
     return 0;
 }
 
@@ -271,20 +270,24 @@ int main(int argc,char *argv[])
 void * scheduler(void *data)       
 {
 
-    struct para* tt = (struct para*)data;
+    
 
     // pin to a core
     cpu_set_t cpuset1;
     CPU_ZERO(&cpuset1);
-    CPU_SET(1+tt->task_num, &cpuset1);
+    CPU_SET(1, &cpuset1);
     int s;
     s = pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset1);
     if (s != 0)
-        cout << "Fail to pin to core " << 1+tt->task_num << endl;
+        cout << "Fail to pin to core " << "scheduler" << endl;
+
+    
+
     for(int i = 0; i < n; i++)
     {
-    GPU_task[sched_order[i]].ready = true;
-        while(GPU_task[sched_order].ready)
+    GPU_task[sched_order[i]-1].ready = true;
+        //cout << "will execute task "<< sched_order[i] << endl;
+        while(GPU_task[sched_order[i]-1].ready == true)
         {
         
         }
@@ -308,6 +311,8 @@ void * pthread0(void *data)
     if (s != 0)
         cout << "Fail to pin to core " << 2+tt->task_num << endl;
 
+    //cout << "thread "<< 1+tt->task_num << "active!" << endl;
+
 
     cudaStream_t stream;
     cudaStreamCreate(&stream);
@@ -317,6 +322,10 @@ void * pthread0(void *data)
     double time_ms_start;
     double time_ms_end;
     double duration;
+
+    while(GPU_task[tt->task_num].ready == false)
+    {
+    }
 
     gettimeofday(&tv,NULL);
     time_ms_start = tv.tv_sec*1000 + tv.tv_usec/1000 - time_offset;
