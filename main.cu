@@ -330,22 +330,25 @@ void * pthread0(void *data)
     gettimeofday(&tv,NULL);
     time_ms_start = tv.tv_sec*1000 + tv.tv_usec/1000 - time_offset;
     
+    cout << "memory length: " << tt->memory_length << endl;
 
-    for(int i = 0; i < tt->memory_length; i++)
+    for(int i = 0; i < tt->memory_length*10; i++)
     {
     cudaMemcpyAsync((void*)tt->d_data1, (void*)tt->d_data01, tt->nBytes, cudaMemcpyHostToDevice,stream);
     cudaMemcpyAsync((void*)tt->d_data2, (void*)tt->d_data02, tt->nBytes, cudaMemcpyHostToDevice,stream);
     //cudaMemcpyAsync((void*)tt->d_data03, (void*)tt->d_data3, tt->nBytes, cudaMemcpyDeviceToHost,stream);
     }
+
+    //cudaError_t err = cudaGetLastError();
+    //printf("%s\n",cudaGetErrorString(err));
+
     cudaStreamSynchronize(stream);
 
     GPU_task[tt->task_num].ready = false;
 
     
-    for(int i = 0; i < tt->kernel_length; i++)
-    {
-    task <<<tt->gridsize,tt->blocksize,0,stream>>> (tt->d_data1, tt->d_data2, tt->d_data3, tt->N, tt->SM_num_start, tt->SM_num_end);
-    }
+
+    task <<<tt->gridsize,tt->blocksize,0,stream>>> (tt->d_data1, tt->d_data2, tt->d_data3, tt->N, tt->SM_num_start, tt->SM_num_end, tt->kernel_length);
 
 
     cudaStreamSynchronize(stream);
