@@ -40,7 +40,6 @@ if((SM_num_start <= SM_num)&&(SM_num <= SM_num_end))
     // Key technique use the (__mysmid() - SM_num_start) as blockIdx.x
     // global index
     long int index = threadIdx.x + (SM_num - SM_num_start) * blockDim.x;
-    // step
     // interleaved execution
     long int off_set = blockDim.x * (SM_num_end - SM_num_start + 1);
     
@@ -66,7 +65,6 @@ if((SM_num_start <= SM_num)&&(SM_num <= SM_num_end))
             }
         }
     }
-//printf("SM num: %d ; Block id: %d \n", SM_num, blockIdx.x);
 }
 
 }

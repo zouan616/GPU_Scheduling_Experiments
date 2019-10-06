@@ -150,8 +150,6 @@ int main(int argc,char *argv[])
     CTA_num_end[i] = CTA_num_start[i] + CTA_num[i] - 1;
     }
     
-    //cout << "CTA_num_start[i]" << i << ": " << CTA_num_start[i] << endl;
-    //cout << "CTA_num_end[i]" << i << ": " << CTA_num_end[i] << endl;
     }
 
     
@@ -170,9 +168,9 @@ int main(int argc,char *argv[])
         //Initialize data
         for(int j = 0; j < N; j++)
         {
-        //x[i][j] = j % 20;
-        //y[i][j] = j % 20;
-        //z[i][j] = 0;
+          x[i][j] = j % 20;
+          y[i][j] = j % 20;
+          z[i][j] = 0;
         }
         
     }
@@ -286,7 +284,6 @@ void * scheduler(void *data)
     for(int i = 0; i < n; i++)
     {
     GPU_task[sched_order[i]-1].ready = true;
-        //cout << "will execute task "<< sched_order[i] << endl;
         while(GPU_task[sched_order[i]-1].ready == true)
         {
         
@@ -311,8 +308,7 @@ void * pthread0(void *data)
     if (s != 0)
         cout << "Fail to pin to core " << 2+tt->task_num << endl;
 
-    //cout << "thread "<< 1+tt->task_num << "active!" << endl;
-
+  
 
     cudaStream_t stream;
     cudaStreamCreate(&stream);
@@ -339,8 +335,6 @@ void * pthread0(void *data)
     //cudaMemcpyAsync((void*)tt->d_data03, (void*)tt->d_data3, tt->nBytes, cudaMemcpyDeviceToHost,stream);
     }
 
-    //cudaError_t err = cudaGetLastError();
-    //printf("%s\n",cudaGetErrorString(err));
 
     cudaStreamSynchronize(stream);
 
