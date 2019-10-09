@@ -113,7 +113,7 @@ int main(int argc,char *argv[])
 
 
     //data length
-    long int N = 1 << 16;
+    long int N = 1 << 18;
 
 
 
@@ -323,8 +323,6 @@ void * pthread0(void *data)
     {
     }
 
-    gettimeofday(&tv,NULL);
-    time_ms_start = tv.tv_sec*1000 + tv.tv_usec/1000 - time_offset;
     
     cout << "memory length: " << tt->memory_length << endl;
 
@@ -340,7 +338,8 @@ void * pthread0(void *data)
 
     GPU_task[tt->task_num].ready = false;
 
-    
+    gettimeofday(&tv,NULL);
+    time_ms_start = tv.tv_sec*1000 + tv.tv_usec/1000 - time_offset;
 
     task <<<tt->gridsize,tt->blocksize,0,stream>>> (tt->d_data1, tt->d_data2, tt->d_data3, tt->N, tt->SM_num_start, tt->SM_num_end, tt->kernel_length);
 

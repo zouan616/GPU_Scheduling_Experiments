@@ -1,0 +1,4 @@
+nvidia-smi  -q -i 0 -d CLOCK
+sudo nvidia-smi -pm ENABLED -i 0
+nvidia-smi  -q -i 0 -d SUPPORTED_CLOCKS
+sudo nvidia-smi -ac 810,1911 -i 0
