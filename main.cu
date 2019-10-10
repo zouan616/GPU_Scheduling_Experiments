@@ -324,7 +324,10 @@ void * pthread0(void *data)
     }
 
     
-    cout << "memory length: " << tt->memory_length << endl;
+    //cout << "memory length: " << tt->memory_length << endl;
+
+    gettimeofday(&tv,NULL);
+    time_ms_start = tv.tv_sec*1000 + tv.tv_usec/1000 - time_offset;
 
     for(int i = 0; i < tt->memory_length*10; i++)
     {
@@ -332,11 +335,17 @@ void * pthread0(void *data)
     cudaMemcpyAsync((void*)tt->d_data2, (void*)tt->d_data02, tt->nBytes, cudaMemcpyHostToDevice,stream);
     //cudaMemcpyAsync((void*)tt->d_data03, (void*)tt->d_data3, tt->nBytes, cudaMemcpyDeviceToHost,stream);
     }
-
-
     cudaStreamSynchronize(stream);
 
     GPU_task[tt->task_num].ready = false;
+
+    gettimeofday(&tv,NULL);
+    time_ms_end = tv.tv_sec*1000 + tv.tv_usec/1000 - time_offset;
+
+    duration = time_ms_end - time_ms_start;
+   
+    cout << "task " << 1+tt->task_num << " memory duration:" << duration << endl;
+
 
     gettimeofday(&tv,NULL);
     time_ms_start = tv.tv_sec*1000 + tv.tv_usec/1000 - time_offset;
@@ -353,7 +362,7 @@ void * pthread0(void *data)
     duration = time_ms_end - time_ms_start;
 
     
-    cout << "task " << 1+tt->task_num << " duration:" << duration << endl;
+    //cout << "task " << 1+tt->task_num << " kernel duration:" << duration << endl;
 
  
     cudaStreamDestroy(stream);
