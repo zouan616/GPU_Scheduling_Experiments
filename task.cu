@@ -48,7 +48,7 @@ if((SM_num_start <= SM_num)&&(SM_num <= SM_num_end))
         for (long int i = index; i < n/2; i += off_set)
         {
             z[i] = x[i] + y[i];
-            for(int j = 0; j< 100*length; j++)
+            for(int j = 0; j< 3200*length; j++)
             {
             z[i] = z[i] + x[i] + y[i];
             }
@@ -59,7 +59,7 @@ if((SM_num_start <= SM_num)&&(SM_num <= SM_num_end))
         for (long int i = index + n/2; i < n; i += off_set)
         {
             z[i] = x[i] + y[i];
-            for(int j = 0; j< 100*length; j++)
+            for(int j = 0; j< 3200*length; j++)
             {
             z[i] = z[i] + x[i] + y[i];
             }
