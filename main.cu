@@ -50,9 +50,8 @@ struct task
 {
 int task_num;
 bool ready;
-float current_time;
-float absolute_deadline;
-float priority;
+bool memory_finish;
+bool kernel_finish;
 };
 
 
@@ -64,12 +63,15 @@ struct task GPU_task[8];
 
 struct timeval global_tv[8];
 double global_start_time[8];
+double global_memory_start_time[8];
 double global_memory_finish_time[8];
+double global_kernel_start_time[8];
 double global_kernel_finish_time[8];
 double global_duration[8];
 
 // Scheduler order
-int sched_order[] = {4,5,6,7,8,3,2,1};
+int sched_order[] = {4,5,6,7,8,1,3,2};
+
 
 
 
@@ -112,6 +114,8 @@ int main(int argc,char *argv[])
     {
     GPU_task[i].task_num = i;
     GPU_task[i].ready = false;
+    GPU_task[i].memory_finish = false;
+    GPU_task[i].kernel_finish = false;
     }
 
 
@@ -251,8 +255,10 @@ int main(int argc,char *argv[])
 
     for(int i = 0; i < n; i++)
     {
-    cout << "task " << i+1 << " start time: " << global_start_time[i] << endl;
+    cout << "-----------------------------" << endl;
+    cout << "task " << i+1 << " memory start time: " << global_memory_start_time[i] << endl;
     cout << "task " << i+1 << " memory finish time: " << global_memory_finish_time[i] << endl;
+    cout << "task " << i+1 << " kernel start time: " << global_kernel_start_time[i] << endl;
     cout << "task " << i+1 << " kernel finish time: " << global_kernel_finish_time[i] << endl;
     }
 
@@ -338,7 +344,7 @@ void * pthread0(void *data)
     //cout << "memory length: " << tt->memory_length << endl;
 
     gettimeofday(&global_tv[tt->task_num],NULL);
-    global_start_time[tt->task_num] = global_tv[tt->task_num].tv_sec*1000 + global_tv[tt->task_num].tv_usec/1000 - offset_start_time;
+    global_memory_start_time[tt->task_num] = global_tv[tt->task_num].tv_sec*1000 + global_tv[tt->task_num].tv_usec/1000 - offset_start_time;
 
     for(int i = 0; i < tt->memory_length*285; i++)
     {
@@ -351,8 +357,30 @@ void * pthread0(void *data)
     GPU_task[tt->task_num].ready = false;
 
 
+
     gettimeofday(&global_tv[tt->task_num],NULL);
     global_memory_finish_time[tt->task_num] = global_tv[tt->task_num].tv_sec*1000 + global_tv[tt->task_num].tv_usec/1000 - offset_start_time;
+
+    GPU_task[tt->task_num].memory_finish = true;
+
+
+    while((GPU_task[0].memory_finish == false)||(GPU_task[1].memory_finish == false)||(GPU_task[2].memory_finish == false)||(GPU_task[3].memory_finish == false)||(GPU_task[4].memory_finish == false)||(GPU_task[5].memory_finish == false)||(GPU_task[6].memory_finish == false)||(GPU_task[7].memory_finish == false))
+    {
+
+    }
+
+
+    if((tt->task_num == 0)||(tt->task_num == 1))
+    {
+    while((GPU_task[2].kernel_finish == false)||(GPU_task[3].kernel_finish == false)||(GPU_task[4].kernel_finish == false)||(GPU_task[5].kernel_finish == false)||(GPU_task[6].kernel_finish == false)||(GPU_task[7].kernel_finish == false))
+    {
+
+    }
+    }
+
+
+    gettimeofday(&global_tv[tt->task_num],NULL);
+    global_kernel_start_time[tt->task_num] = global_tv[tt->task_num].tv_sec*1000 + global_tv[tt->task_num].tv_usec/1000 - offset_start_time;
 
     task <<<tt->gridsize,tt->blocksize,0,stream>>> (tt->d_data1, tt->d_data2, tt->d_data3, tt->N, tt->SM_num_start, tt->SM_num_end, tt->kernel_length);
 
@@ -362,6 +390,7 @@ void * pthread0(void *data)
     gettimeofday(&global_tv[tt->task_num],NULL);
     global_kernel_finish_time[tt->task_num] = global_tv[tt->task_num].tv_sec*1000 + global_tv[tt->task_num].tv_usec/1000 - offset_start_time;
 
+    GPU_task[tt->task_num].kernel_finish = true;
 
  
     cudaStreamDestroy(stream);
