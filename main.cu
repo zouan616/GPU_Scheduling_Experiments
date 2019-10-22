@@ -70,7 +70,18 @@ double global_kernel_finish_time[8];
 double global_duration[8];
 
 // Scheduler order
-int sched_order[] = {4,5,6,7,8,1,3,2};
+
+// ------------------- alg-I--------------
+int sched_order[] = {4,5,6,7,8,3,2,1};
+
+// ------------------- alg-I*--------------
+//int sched_order[] = {1,4,5,6,2,7,8,3};
+
+// ------------------- alg-II--------------
+//int sched_order[] = {1,2,3,4,5,6,7,8};
+
+// ------------------- alg-B--------------
+//int sched_order[] = {4,5,6,7,8,1,3,2};
 
 
 
@@ -141,6 +152,9 @@ int main(int argc,char *argv[])
     config_input_parameter >> kernel_length[i];
     config_input_parameter >> CTA_num[i];
 
+    //---------------for 21, 28 SMs--------------------------//
+    kernel_length[i] = kernel_length[i] * 4 / 1.4;
+    CTA_num[i] = CTA_num[i] * 4;
     }
     
 
@@ -150,6 +164,8 @@ int main(int argc,char *argv[])
 
     int CTA_num_start[n], CTA_num_end[n];
 
+//---------------for 7, 14 SMs--------------------------//
+/*
     for(int i = 0; i < n; i++)
     {
     if(i==0)
@@ -162,10 +178,81 @@ int main(int argc,char *argv[])
     CTA_num_start[i] = CTA_num_end[i-1] + 1;
     CTA_num_end[i] = CTA_num_start[i] + CTA_num[i] - 1;
     }
-    
+    }
+*/
+
+//---------------for 21, 28 SMs--------------------------//
+
+    for(int i = 3; i < 8; i++)
+    {
+    if(i==3)
+    {
+    CTA_num_start[i] = 0;
+    CTA_num_end[i] = CTA_num_start[i] + CTA_num[i] - 1;
+    }
+    else
+    {
+    CTA_num_start[i] = CTA_num_end[i-1] + 1;
+    CTA_num_end[i] = CTA_num_start[i] + CTA_num[i] - 1;
+    }
     }
 
     
+    for(int i = 0; i < 2; i++)
+    {
+    if(i==0)
+    {
+    CTA_num_start[i] = 0;
+    CTA_num_end[i] = CTA_num_start[i] + CTA_num[i] - 1;
+    }
+    else
+    {
+    CTA_num_start[i] = CTA_num_end[i-1] + 1;
+    CTA_num_end[i] = CTA_num_start[i] + CTA_num[i] - 1;
+    }
+    }
+
+    for(int i = 2; i < 3; i++)
+    {
+    if(i==2)
+    {
+    CTA_num_start[i] = 0;
+    CTA_num_end[i] = CTA_num_start[i] + CTA_num[i] - 1;
+    }
+    else
+    {
+    CTA_num_start[i] = CTA_num_end[i-1] + 1;
+    CTA_num_end[i] = CTA_num_start[i] + CTA_num[i] - 1;
+    }
+    }
+
+
+
+/*
+CTA_num_start[0] = 0;
+CTA_num_end[0] = 15;
+CTA_num_start[3] = 16;
+CTA_num_end[3] = 19;
+CTA_num_start[4] = 20;
+CTA_num_end[4] = 23;
+CTA_num_start[5] = 24;
+CTA_num_end[5] = 27;
+
+CTA_num_start[1] = 0;
+CTA_num_end[1] = 15;
+CTA_num_start[6] = 16;
+CTA_num_end[6] = 19;
+CTA_num_start[7] = 20;
+CTA_num_end[7] = 23;
+
+CTA_num_start[2] = 0;
+CTA_num_end[2] = 7;
+*/
+
+
+
+
+
      long int nBytes = N * sizeof(float);
 
 
@@ -364,11 +451,24 @@ void * pthread0(void *data)
     GPU_task[tt->task_num].memory_finish = true;
 
 
+    //---------alg-II--------------------//
+    /*
+    if((tt->task_num != 0)&&(tt->task_num != 1))
+    {
+    while((GPU_task[7].memory_finish == false))
+    {
+
+    }
+    }
+    */
+
+
+    //---------alg-B--------------------//
+    /*
     while((GPU_task[0].memory_finish == false)||(GPU_task[1].memory_finish == false)||(GPU_task[2].memory_finish == false)||(GPU_task[3].memory_finish == false)||(GPU_task[4].memory_finish == false)||(GPU_task[5].memory_finish == false)||(GPU_task[6].memory_finish == false)||(GPU_task[7].memory_finish == false))
     {
 
     }
-
 
     if((tt->task_num == 0)||(tt->task_num == 1))
     {
@@ -377,7 +477,7 @@ void * pthread0(void *data)
 
     }
     }
-
+    */
 
     gettimeofday(&global_tv[tt->task_num],NULL);
     global_kernel_start_time[tt->task_num] = global_tv[tt->task_num].tv_sec*1000 + global_tv[tt->task_num].tv_usec/1000 - offset_start_time;
