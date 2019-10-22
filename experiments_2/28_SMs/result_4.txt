@@ -1,0 +1,42 @@
+parameters_4.txt
+-----------------------------
+task 1 memory start time: 0
+task 1 memory finish time: 97
+task 1 kernel start time: 3598
+task 1 kernel finish time: 4901
+-----------------------------
+task 2 memory start time: 97
+task 2 memory finish time: 1065
+task 2 kernel start time: 3598
+task 2 kernel finish time: 4965
+-----------------------------
+task 3 memory start time: 1065
+task 3 memory finish time: 2033
+task 3 kernel start time: 2517
+task 3 kernel finish time: 3598
+-----------------------------
+task 4 memory start time: 2033
+task 4 memory finish time: 2130
+task 4 kernel start time: 2517
+task 4 kernel finish time: 3570
+-----------------------------
+task 5 memory start time: 2130
+task 5 memory finish time: 2227
+task 5 kernel start time: 2517
+task 5 kernel finish time: 3553
+-----------------------------
+task 6 memory start time: 2227
+task 6 memory finish time: 2324
+task 6 kernel start time: 2517
+task 6 kernel finish time: 3578
+-----------------------------
+task 7 memory start time: 2324
+task 7 memory finish time: 2420
+task 7 kernel start time: 2517
+task 7 kernel finish time: 3594
+-----------------------------
+task 8 memory start time: 2420
+task 8 memory finish time: 2517
+task 8 kernel start time: 2517
+task 8 kernel finish time: 3585
+Finish!
