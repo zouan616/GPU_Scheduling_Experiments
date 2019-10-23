@@ -23,6 +23,7 @@
 
 using namespace std;
 void * pthread0(void *data);
+void * scheduler(void *data);
 
 struct para
 {
@@ -57,7 +58,7 @@ bool kernel_finish;
 
 
 //task number
-int n = 1; 
+int n = 8; 
 struct task GPU_task[8];
 
 struct timeval global_tv[8];
@@ -68,8 +69,19 @@ double global_kernel_start_time[8];
 double global_kernel_finish_time[8];
 double global_duration[8];
 
+// Scheduler order
 
+// ------------------- alg-I--------------
+//int sched_order[] = {4,5,6,7,8,3,2,1};
 
+// ------------------- alg-I*--------------
+//int sched_order[] = {1,4,5,6,2,7,8,3};
+
+// ------------------- alg-II--------------
+int sched_order[] = {1,2,3,4,5,6,7,8};
+
+// ------------------- alg-B--------------
+//int sched_order[] = {4,5,6,7,8,1,3,2};
 
 
 
@@ -120,6 +132,8 @@ int main(int argc,char *argv[])
 
     //create CPU thread
     pthread_t tidp[n];
+    pthread_t scheduler_thread;
+
 
 
     //data length
@@ -127,31 +141,31 @@ int main(int argc,char *argv[])
 
 
 
-    //ifstream config_input_parameter(argv[1],ios::app);
+    ifstream config_input_parameter(argv[1],ios::app);
     
 
-    //cout << argv[1] << endl;
+    cout << argv[1] << endl;
 
     for(int i = 0; i < n; i++)
     {
-    //config_input_parameter >> memory_length[i];
-    //config_input_parameter >> kernel_length[i];
-    //config_input_parameter >> CTA_num[i];
+    config_input_parameter >> memory_length[i];
+    config_input_parameter >> kernel_length[i];
+    config_input_parameter >> CTA_num[i];
 
-
-    memory_length[i] = atoi(argv[1]);
-    kernel_length[i] = atoi(argv[2]);
-    CTA_num[i] = atoi(argv[3]);
-
+    //---------------for 7, 14, 21, 28 SMs--------------------------//
+    kernel_length[i] = kernel_length[i] * 4;
+    CTA_num[i] = CTA_num[i] * 4;
     }
     
 
 
 
-    //config_input_parameter.close();
+    config_input_parameter.close();
 
     int CTA_num_start[n], CTA_num_end[n];
 
+//---------------for 7, 14 SMs--------------------------//
+/*
     for(int i = 0; i < n; i++)
     {
     if(i==0)
@@ -165,6 +179,79 @@ int main(int argc,char *argv[])
     CTA_num_end[i] = CTA_num_start[i] + CTA_num[i] - 1;
     }
     }
+*/
+
+//---------------for 21, 28 SMs--------------------------//
+///*
+    for(int i = 0; i < 2; i++)
+    {
+    if(i==0)
+    {
+    CTA_num_start[i] = 0;
+    CTA_num_end[i] = CTA_num_start[i] + CTA_num[i] - 1;
+    }
+    else
+    {
+    CTA_num_start[i] = CTA_num_end[i-1] + 1;
+    CTA_num_end[i] = CTA_num_start[i] + CTA_num[i] - 1;
+    }
+    }
+
+    
+    for(int i = 2; i < 8; i++)
+    {
+    if(i==2)
+    {
+    CTA_num_start[i] = 0;
+    CTA_num_end[i] = CTA_num_start[i] + CTA_num[i] - 1;
+    }
+    else
+    {
+    CTA_num_start[i] = CTA_num_end[i-1] + 1;
+    CTA_num_end[i] = CTA_num_start[i] + CTA_num[i] - 1;
+    }
+    }
+//*/
+/*
+    for(int i = 2; i < 3; i++)
+    {
+    if(i==2)
+    {
+    CTA_num_start[i] = 0;
+    CTA_num_end[i] = CTA_num_start[i] + CTA_num[i] - 1;
+    }
+    else
+    {
+    CTA_num_start[i] = CTA_num_end[i-1] + 1;
+    CTA_num_end[i] = CTA_num_start[i] + CTA_num[i] - 1;
+    }
+    }
+*/
+
+
+/*
+CTA_num_start[0] = 0;
+CTA_num_end[0] = 11;
+CTA_num_start[3] = 12;
+CTA_num_end[3] = 14;
+CTA_num_start[4] = 15;
+CTA_num_end[4] = 17;
+CTA_num_start[5] = 18;
+CTA_num_end[5] = 20;
+
+CTA_num_start[1] = 0;
+CTA_num_end[1] = 11;
+CTA_num_start[6] = 12;
+CTA_num_end[6] = 14;
+CTA_num_start[7] = 15;
+CTA_num_end[7] = 17;
+
+CTA_num_start[2] = 0;
+CTA_num_end[2] = 5;
+*/
+
+
+
 
 
      long int nBytes = N * sizeof(float);
@@ -239,6 +326,9 @@ int main(int argc,char *argv[])
     }
 
 
+    usleep(1000000);
+
+    pthread_create(&scheduler_thread, NULL, scheduler, NULL);
 
     
     gettimeofday(&offset_tv,NULL);
@@ -253,13 +343,11 @@ int main(int argc,char *argv[])
 
     for(int i = 0; i < n; i++)
     {
-    //cout << "-----------------------------" << endl;
-    //cout << "task " << i+1 << " memory start time: " << global_memory_start_time[i] << endl;
-    //cout << "task " << i+1 << " memory finish time: " << global_memory_finish_time[i] << endl;
-    //cout << "task " << i+1 << " kernel start time: " << global_kernel_start_time[i] << endl;
-    //cout << "task " << i+1 << " kernel finish time: " << global_kernel_finish_time[i] << endl;
-
-    cout << global_kernel_finish_time[i] - global_kernel_start_time[i] << endl;
+    cout << "-----------------------------" << endl;
+    cout << "task " << i+1 << " memory start time: " << global_memory_start_time[i] << endl;
+    cout << "task " << i+1 << " memory finish time: " << global_memory_finish_time[i] << endl;
+    cout << "task " << i+1 << " kernel start time: " << global_kernel_start_time[i] << endl;
+    cout << "task " << i+1 << " kernel finish time: " << global_kernel_finish_time[i] << endl;
     }
 
 
@@ -281,11 +369,40 @@ int main(int argc,char *argv[])
     cudaFreeHost(z[i]); 
     }
 
-    //cout << "Finish!" << endl;
+    cout << "Finish!" << endl;
     return 0;
 }
 
 
+
+void * scheduler(void *data)       
+{
+
+    
+
+    // pin to a core
+    cpu_set_t cpuset1;
+    CPU_ZERO(&cpuset1);
+    CPU_SET(1, &cpuset1);
+    int s;
+    s = pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset1);
+    if (s != 0)
+        cout << "Fail to pin to core " << "scheduler" << endl;
+
+    
+
+    for(int i = 0; i < n; i++)
+    {
+    GPU_task[sched_order[i]-1].ready = true;
+        while(GPU_task[sched_order[i]-1].ready == true)
+        {
+        
+        }
+    }
+
+
+    return 0;
+}
 
 void * pthread0(void *data)       
 {
@@ -307,7 +424,9 @@ void * pthread0(void *data)
     cudaStreamCreate(&stream);
 
 
-
+    while(GPU_task[tt->task_num].ready == false)
+    {
+    }
 
     
     //cout << "memory length: " << tt->memory_length << endl;
@@ -325,13 +444,41 @@ void * pthread0(void *data)
 
     GPU_task[tt->task_num].ready = false;
 
-    //cout << "got here" << endl;
+
 
     gettimeofday(&global_tv[tt->task_num],NULL);
     global_memory_finish_time[tt->task_num] = global_tv[tt->task_num].tv_sec*1000 + global_tv[tt->task_num].tv_usec/1000 - offset_start_time;
 
     GPU_task[tt->task_num].memory_finish = true;
 
+
+    //---------alg-II--------------------//
+    /*
+    if((tt->task_num != 0)&&(tt->task_num != 1))
+    {
+    while((GPU_task[7].memory_finish == false))
+    {
+
+    }
+    }
+    */
+
+
+    //---------alg-B--------------------//
+    ///*
+    while((GPU_task[0].memory_finish == false)||(GPU_task[1].memory_finish == false)||(GPU_task[2].memory_finish == false)||(GPU_task[3].memory_finish == false)||(GPU_task[4].memory_finish == false)||(GPU_task[5].memory_finish == false)||(GPU_task[6].memory_finish == false)||(GPU_task[7].memory_finish == false))
+    {
+
+    }
+
+    if((tt->task_num == 0)||(tt->task_num == 1))
+    {
+    while((GPU_task[2].kernel_finish == false)||(GPU_task[3].kernel_finish == false)||(GPU_task[4].kernel_finish == false)||(GPU_task[5].kernel_finish == false)||(GPU_task[6].kernel_finish == false)||(GPU_task[7].kernel_finish == false))
+    {
+
+    }
+    }
+    //*/
 
     gettimeofday(&global_tv[tt->task_num],NULL);
     global_kernel_start_time[tt->task_num] = global_tv[tt->task_num].tv_sec*1000 + global_tv[tt->task_num].tv_usec/1000 - offset_start_time;

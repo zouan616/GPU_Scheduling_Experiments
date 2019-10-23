@@ -1,0 +1,119 @@
+for ((i=1; i<=100; i++))
+do
+  ./main 1 100 5 >> exetime.txt
+done
+
+for ((i=1; i<=100; i++))
+do
+  ./main 1 100 6 >> exetime.txt
+done
+
+for ((i=1; i<=100; i++))
+do
+  ./main 1 100 7 >> exetime.txt
+done
+
+for ((i=1; i<=100; i++))
+do
+  ./main 1 100 8 >> exetime.txt
+done
+
+for ((i=1; i<=100; i++))
+do
+  ./main 1 100 9 >> exetime.txt
+done
+
+for ((i=1; i<=100; i++))
+do
+  ./main 1 100 10 >> exetime.txt
+done
+
+for ((i=1; i<=100; i++))
+do
+  ./main 1 100 11 >> exetime.txt
+done
+
+for ((i=1; i<=100; i++))
+do
+  ./main 1 100 12 >> exetime.txt
+done
+
+for ((i=1; i<=100; i++))
+do
+  ./main 1 100 13 >> exetime.txt
+done
+
+for ((i=1; i<=100; i++))
+do
+  ./main 1 100 14 >> exetime.txt
+done
+
+for ((i=1; i<=100; i++))
+do
+  ./main 1 100 15 >> exetime.txt
+done
+
+for ((i=1; i<=100; i++))
+do
+  ./main 1 100 16 >> exetime.txt
+done
+
+for ((i=1; i<=100; i++))
+do
+  ./main 1 100 17 >> exetime.txt
+done
+
+for ((i=1; i<=100; i++))
+do
+  ./main 1 100 18 >> exetime.txt
+done
+
+for ((i=1; i<=100; i++))
+do
+  ./main 1 100 19 >> exetime.txt
+done
+
+for ((i=1; i<=100; i++))
+do
+  ./main 1 100 20 >> exetime.txt
+done
+
+for ((i=1; i<=100; i++))
+do
+  ./main 1 100 21 >> exetime.txt
+done
+
+for ((i=1; i<=100; i++))
+do
+  ./main 1 100 22 >> exetime.txt
+done
+
+for ((i=1; i<=100; i++))
+do
+  ./main 1 100 23 >> exetime.txt
+done
+
+for ((i=1; i<=100; i++))
+do
+  ./main 1 100 24 >> exetime.txt
+done
+
+for ((i=1; i<=100; i++))
+do
+  ./main 1 100 25 >> exetime.txt
+done
+
+for ((i=1; i<=100; i++))
+do
+  ./main 1 100 26 >> exetime.txt
+done
+
+for ((i=1; i<=100; i++))
+do
+  ./main 1 100 27 >> exetime.txt
+done
+
+for ((i=1; i<=100; i++))
+do
+  ./main 1 100 28 >> exetime.txt
+done
