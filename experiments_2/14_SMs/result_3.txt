@@ -3,40 +3,41 @@ parameters_3.txt
 task 1 memory start time: 0
 task 1 memory finish time: 97
 task 1 kernel start time: 97
-task 1 kernel finish time: 937
+task 1 kernel finish time: 1064
 -----------------------------
 task 2 memory start time: 97
-task 2 memory finish time: 1063
-task 2 kernel start time: 1063
-task 2 kernel finish time: 2026
+task 2 memory finish time: 1066
+task 2 kernel start time: 1066
+task 2 kernel finish time: 2073
 -----------------------------
-task 3 memory start time: 1063
-task 3 memory finish time: 2029
-task 3 kernel start time: 2512
-task 3 kernel finish time: 3213
+task 3 memory start time: 1066
+task 3 memory finish time: 2032
+task 3 kernel start time: 2515
+task 3 kernel finish time: 3562
 -----------------------------
-task 4 memory start time: 2029
-task 4 memory finish time: 2126
-task 4 kernel start time: 2512
-task 4 kernel finish time: 3213
+task 4 memory start time: 2032
+task 4 memory finish time: 2129
+task 4 kernel start time: 2515
+task 4 kernel finish time: 3545
 -----------------------------
-task 5 memory start time: 2126
-task 5 memory finish time: 2222
-task 5 kernel start time: 2512
-task 5 kernel finish time: 3211
+task 5 memory start time: 2129
+task 5 memory finish time: 2225
+task 5 kernel start time: 2515
+task 5 kernel finish time: 3555
 -----------------------------
-task 6 memory start time: 2222
-task 6 memory finish time: 2319
-task 6 kernel start time: 2512
-task 6 kernel finish time: 3212
+task 6 memory start time: 2225
+task 6 memory finish time: 2322
+task 6 kernel start time: 2515
+task 6 kernel finish time: 3568
 -----------------------------
-task 7 memory start time: 2319
-task 7 memory finish time: 2416
-task 7 kernel start time: 2512
-task 7 kernel finish time: 3213
+task 7 memory start time: 2322
+task 7 memory finish time: 2419
+task 7 kernel start time: 2515
+task 7 kernel finish time: 3537
 -----------------------------
-task 8 memory start time: 2416
-task 8 memory finish time: 2512
-task 8 kernel start time: 2512
-task 8 kernel finish time: 2957
+task 8 memory start time: 2419
+task 8 memory finish time: 2515
+task 8 kernel start time: 2515
+task 8 kernel finish time: 3579
 Finish!
+
